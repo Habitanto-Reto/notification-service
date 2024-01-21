@@ -1,0 +1,93 @@
+version: '3'
+services:
+  notification-service:
+    build: .
+    ports:
+      - "3002:3002"
+    environment:
+      - DB_ADMIN=$DB_ADMIN
+      - DB_ADMIN_PWD=$DB_ADMIN_PWD
+      - DB_NAME=$DB_NAME_AUTH
+      - DB_HOST=$DB_HOST
+      - DB_PORT=$DB_PORT
+      - PORT=3002
+      - CLIENT_KAFKA_ID=$CLIENT_KAFKA_ID
+      - CLIENT_KAFKA_BROKERS=$CLIENT_KAFKA_BROKERS
+      - MAILGUN_API_KEY=$MAILGUN_API_KEY
+      - MAILGUN_DOMAIN=$MAILGUN_DOMAIN
+      - MAIL_FROM_SENDER_ADDRESS=$MAIL_FROM_SENDER_ADDRESS
+
+  auth-service:
+    #ghcr.io/habitanto-reto/auth-service:0.0.5
+    image: ghcr.io/habitanto-reto/auth-service:0.0.5
+    container_name: auth-service
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_ADMIN=$DB_ADMIN
+      - DB_ADMIN_PWD=$DB_ADMIN_PWD
+      - DB_NAME=$DB_NAME_AUTH
+      - DB_HOST=$DB_HOST
+      - DB_PORT=$DB_PORT
+      - PORT=$PORT_AUTH_SERVICE
+      - JWT_SECRET=$JWT_SECRET
+
+  task-service:
+    # ghcr.io/habitanto-reto/task-service:0.0.3
+    image: task-service-task-service
+    container_name: task-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_ADMIN=$DB_ADMIN
+      - DB_ADMIN_PWD=$DB_ADMIN_PWD
+      - DB_NAME=$DB_NAME_TASK
+      - DB_HOST=$DB_HOST
+      - DB_PORT=$DB_PORT
+      - PORT=$PORT_TASK_SERVICE
+      - JWT_SECRET=$JWT_SECRET
+      - CLIENT_KAFKA_ID=$CLIENT_KAFKA_ID
+      - CLIENT_KAFKA_BROKERS=$CLIENT_KAFKA_BROKERS
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo-auth
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$DB_ADMIN
+      - MONGO_INITDB_ROOT_PASSWORD=$DB_ADMIN_PWD
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./addons/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - dbdata:/data/db
+
+  zookeeper:
+    container_name: zookeeper
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    volumes:
+      - ./data/kafka:/var/run/docker.sock
+      - ./create-topics.sh:/create-topics.sh
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "task-completed:1:1"
+    depends_on:
+      - zookeeper
+
+volumes:
+  dbdata:
+  cache:
+    driver: local

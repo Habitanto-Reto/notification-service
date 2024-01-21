@@ -1,19 +1,28 @@
 {
   "name": "notification-service",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "kafkajs": "^2.2.4"
+    "@types/uuid": "^9.0.7",
+    "form-data": "^4.0.0",
+    "kafkajs": "^2.2.4",
+    "mailgun.js": "^10.0.0",
+    "mongoose": "^8.1.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "git-semver-tags": "^4.1.1",
-    "standard-version": "^9.5.0"
+    "standard-version": "^9.5.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }
