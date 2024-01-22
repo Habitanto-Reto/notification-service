@@ -3,7 +3,7 @@ name: Deploy to ECR
 on:
 
   push:
-    branches: [ fix-tag-ci ]
+    branches: [ main ]
 
 jobs:
 
